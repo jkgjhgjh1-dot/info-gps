@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPS VIP BOT - تسجيل الدخول</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+body {
+    font-family: 'Share Tech Mono', monospace;
+    background: black;
+    color: #00ff00;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding-top: 50px;
+    overflow: hidden;
+}
+.matrix {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: #00ff00;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 1;
+}
+.container {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 90%;
+    max-width: 900px;
+}
+.login-box, .uid-box, .account-box {
+    background: rgba(0,0,0,0.85);
+    padding: 30px;
+    border: 2px solid #00ff00;
+    border-radius: 15px;
+    box-shadow: 0 0 30px #00ff00;
+    width: 100%;
+}
+.login-box h1, .uid-box h2, .account-box h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px #00ff00;
+}
+input[type="text"], input[type="password"] {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #00ff00;
+    border-radius: 8px;
+    background: black;
+    color: #00ff00;
+    font-size: 16px;
+}
+input[type="submit"] {
+    padding: 10px 30px;
+    border: none;
+    border-radius: 8px;
+    background: #00ff00;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.3s;
+}
+input[type="submit"]:hover {
+    background: #0b3d0b;
+    color: #00ff00;
+}
+.account-box pre {
+    font-size: 14px;
+    white-space: pre-wrap;
+    color: #00ff00;
+}
+</style>
+</head>
+<body>
+
+<canvas class="matrix"></canvas>
+
+<div class="container">
+
+    <!-- شاشة تسجيل الدخول -->
+    <div class="login-box" id="loginBox">
+        <h1>GPS VIP BOT - تسجيل الدخول</h1>
+        <form id="loginForm">
+            <label>اسم المستخدم</label>
+            <input type="text" id="username" placeholder="ادخل اسم المستخدم" required>
+            <label>كلمة المرور</label>
+            <input type="password" id="password" placeholder="ادخل كلمة المرور" required>
+            <br>
+            <input type="submit" value="تسجيل الدخول">
+        </form>
+    </div>
+
+    <!-- بعد تسجيل الدخول: ادخل UID -->
+    <div class="uid-box" id="uidBox" style="display:none;">
+        <h2>ادخل UID لجلب معلومات Free Fire</h2>
+        <form id="uidForm">
+            <input type="text" id="uid" placeholder="أدخل UID الحساب" required>
+            <br>
+            <input type="submit" value="جلب المعلومات">
+        </form>
+    </div>
+
+    <!-- معلومات الحساب -->
+    <div class="account-box" id="accountBox" style="display:none;">
+        <h2>معلومات الحساب</h2>
+        <pre id="accountInfo">جارٍ تحميل المعلومات...</pre>
+    </div>
+
+</div>
+
+<audio autoplay loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    متصفحك لا يدعم تشغيل الصوت.
+</audio>
+
+<script>
+// تأثير Matrix
+const canvas = document.querySelector('.matrix');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*';
+const fontSize = 14;
+const columns = canvas.width / fontSize;
+const drops = [];
+for(let x=0;x<columns;x++){drops[x]=Math.random()*canvas.height;}
+function draw(){
+    ctx.fillStyle='rgba(0,0,0,0.05)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#00ff00';
+    ctx.font=fontSize+'px monospace';
+    for(let i=0;i<drops.length;i++){
+        const text = letters.charAt(Math.floor(Math.random()*letters.length));
+        ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+        if(drops[i]*fontSize>canvas.height && Math.random()>0.975) drops[i]=0;
+        drops[i]++;
+    }
+}
+setInterval(draw,50);
+window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+
+// يوزر وبسورد ثابتين
+const correctUser = "gpsvip";
+const correctPass = "vipbot123";
+
+document.getElementById('loginForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const user = document.getElementById('username').value.trim();
+    const pass = document.getElementById('password').value.trim();
+
+    if(user === correctUser && pass === correctPass){
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('uidBox').style.display = 'block';
+    } else {
+        alert('اسم المستخدم أو كلمة المرور غير صحيحة!');
+    }
+});
+
+// جلب المعلومات من API بعد ادخال UID
+document.getElementById('uidForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const uid = document.getElementById('uid').value.trim();
+    if(!uid) return alert('ادخل UID صالح!');
+
+    try {
+        const response = await fetch(`https://amin-info.vercel.app/info?uid=${uid}`);
+        if(!response.ok) throw new Error('خطأ في جلب البيانات');
+        const data = await response.json();
+
+        const { basicInfo, profileInfo, socialInfo, clanBasicInfo, captainBasicInfo, petInfo, creditScoreInfo } = data;
+
+        const accountText = `
+┌ 📋 𝗔𝗰𝗰𝗼𝘂𝗻𝘁 𝗵𝗶𝘀𝘁𝗼𝗿𝘆 [×]
+├─ Last Login : ${basicInfo?.lastLoginAt || 'N/A'}
+└─ Created At : ${basicInfo?.createAt || 'N/A'}
+
+┌ 👤 𝗔𝗰𝗰𝗼𝘂𝗻𝘁 𝗶𝗻𝗳𝗼𝗿𝗺𝗮𝘁𝗶𝗼𝗻
+├─ Account ID : ${basicInfo?.accountId || 'N/A'}
+├─ Nickname : ${basicInfo?.nickname || 'N/A'}
+├─ Level : ${basicInfo?.level || 'N/A'}
+├─ Likes : ${basicInfo?.liked || 'N/A'}
+├─ Experience : ${basicInfo?.exp || 'N/A'}
+├─ Avatar : ${profileInfo?.avatarId || 'N/A'}
+├─ Banner : ${basicInfo?.title || 'N/A'}
+├─ Rank : ${basicInfo?.rank || 'N/A'}
+├─ Ranking Points : ${basicInfo?.rankingPoints || 'N/A'}
+├─ Badge Count : ${basicInfo?.badgeCnt || 'N/A'}
+├─ Booyah Pass : ${basicInfo?.hasElitePass || 'N/A'}
+├─ CS Rank : ${basicInfo?.csRank || 'N/A'}
+├─ CS Ranking Points : ${basicInfo?.csRankingPoints || 'N/A'}
+└─ Bio : ${socialInfo?.signature || 'N/A'}
+
+┌ 🛡️ 𝗚𝗨𝗜𝗟𝗗 𝗜𝗡𝗙𝗢
+├─ Clan ID : ${clanBasicInfo?.clanId || 'N/A'}
+├─ Clan Name : ${clanBasicInfo?.clanName || 'N/A'}
+├─ Level : ${clanBasicInfo?.clanLevel || 'N/A'}
+├─ Capacity : ${clanBasicInfo?.capacity || 'N/A'}
+├─ Member Num : ${clanBasicInfo?.memberNum || 'N/A'}
+└─ Captain Name : ${captainBasicInfo?.nickname || 'N/A'}
+
+┌ ♻️ 𝗚𝗨𝗜𝗟𝗗 𝗟𝗘𝗔𝗗𝗘𝗥 𝗜𝗡𝗙𝗢
+├─ Nickname : ${captainBasicInfo?.nickname || 'N/A'}
+├─ Level : ${captainBasicInfo?.level || 'N/A'}
+├─ Exp : ${captainBasicInfo?.exp || 'N/A'}
+├─ Rank : ${captainBasicInfo?.rank || 'N/A'}
+├─ Ranking Points : ${captainBasicInfo?.rankingPoints || 'N/A'}
+├─ Badge Count : ${captainBasicInfo?.badgeCnt || 'N/A'}
+├─ Likes : ${captainBasicInfo?.liked || 'N/A'}
+├─ CS Rank : ${captainBasicInfo?.csRank || 'N/A'}
+├─ CS Ranking Points : ${captainBasicInfo?.csRankingPoints || 'N/A'}
+├─ Last Login At : ${captainBasicInfo?.lastLoginAt || 'N/A'}
+└─ Created At : ${captainBasicInfo?.createAt || 'N/A'}
+
+┌ 🐾 𝗣𝗘𝗧 𝗜𝗡𝗙𝗢
+├─ Pet ID : ${petInfo?.id || 'N/A'}
+├─ Pet Name : ${petInfo?.name || 'N/A'}
+├─ Pet Level : ${petInfo?.level || 'N/A'}
+├─ Pet Experience : ${petInfo?.exp || 'N/A'}
+└─ Selected Skill : ${petInfo?.selectedSkillId || 'N/A'}
+
+┌ ⚙️ 𝗖𝗥𝗘𝗗𝗜𝗧 𝗦𝗖𝗢𝗥𝗘 𝗜𝗡𝗙𝗢
+├─ Credit Score : ${creditScoreInfo?.creditScore || 'N/A'}
+├─ Reward State : ${creditScoreInfo?.rewardState || 'N/A'}
+├─ Periodic Summary Likes : ${creditScoreInfo?.periodicSummaryLikeCnt || 'N/A'}
+├─ Periodic Summary Illegal Actions : ${creditScoreInfo?.periodicSummaryIllegalCnt || 'N/A'}
+└─ Periodic Summary End Time : ${creditScoreInfo?.periodicSummaryEndTime || 'N/A'}
+
+𝑭 𝑹 𝑬 𝑬  𝑷 𝑨 𝑳 𝑨 𝑺 𝑻 𝑰 𝑵 𝑬
+
+┌ 🚧 𝗠𝗬 𝗔𝗖𝗖𝗢𝗨𝗡𝗧𝗦
+├─ Telegram : @gps_antiban
+├─ Group : https://t.me/gpsantibanofficil2
+└─ Instagram : @ayoub_.official
+        `;
+
+        document.getElementById('accountInfo').textContent = accountText;
+        document.getElementById('uidBox').style.display = 'none';
+        document.getElementById('accountBox').style.display = 'block';
+
+    } catch(err) {
+        alert('حدث خطأ عند جلب البيانات، تحقق من UID.');
+        console.error(err);
+    }
+});
+</script>
+</body>
+</html>
